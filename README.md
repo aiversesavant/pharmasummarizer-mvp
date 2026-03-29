@@ -1,25 +1,22 @@
+---
+title: PharmaSummarizer MVP
+emoji: 💊
+colorFrom: blue
+colorTo: green
+sdk: streamlit
+sdk_version: "1.32.0"
+app_file: app.py
+pinned: false
+---
+
 # PharmaSummarizer MVP
 
-PharmaSummarizer MVP is a lightweight pharmacovigilance extraction demo.
+A lightweight Streamlit app for pharma/regulatory PDF summarization.
 
 ## Features
-
-- adverse event narrative input
-- extraction of:
-  - drug name
-  - adverse event
-  - severity
-  - outcome
-  - seriousness
-  - patient age
-  - patient sex
-- structured JSON output
-- Gradio UI
-
-## Run locally
-
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python app.py
+- Upload PDF
+- Extract text
+- Generate document title
+- Generate short summary
+- Show key highlights
+- Show extracted text preview
