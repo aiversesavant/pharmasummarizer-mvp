@@ -2,6 +2,7 @@ import fitz
 
 
 def extract_summary(file_path: str) -> str:
+    """Extract a simple text preview from a PDF file path."""
     doc = fitz.open(file_path)
 
     text_parts = []

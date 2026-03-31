@@ -1,4 +1,6 @@
 import re
+from typing import List
+
 import fitz
 import streamlit as st
 
@@ -71,8 +73,9 @@ BODY_START_HINTS = [
 
 
 def extract_text_from_pdf(pdf_bytes: bytes) -> str:
+    """Extract text from a PDF uploaded in memory."""
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-    text_parts = []
+    text_parts: List[str] = []
 
     for page in doc:
         page_text = page.get_text()
@@ -83,6 +86,7 @@ def extract_text_from_pdf(pdf_bytes: bytes) -> str:
 
 
 def clean_preview_text(text: str) -> str:
+    """Clean preview text while keeping readable line breaks."""
     lines = [line.rstrip() for line in text.splitlines()]
     cleaned_lines = []
 
@@ -99,7 +103,7 @@ def clean_preview_text(text: str) -> str:
     return "\n".join(cleaned_lines).strip()
 
 
-def get_clean_lines(text: str):
+def get_clean_lines(text: str) -> List[str]:
     return [line.strip() for line in text.splitlines() if line.strip()]
 
 
@@ -117,10 +121,11 @@ def normalize_sentence(sentence: str) -> str:
     return sentence
 
 
-def split_sentences(text: str):
+def split_sentences(text: str) -> List[str]:
     text = text.replace("\n", " ")
     raw = [s.strip() for s in text.split(".") if s.strip()]
-    return [normalize_sentence(s) for s in raw if normalize_sentence(s)]
+    normalized = [normalize_sentence(s) for s in raw]
+    return [s for s in normalized if s]
 
 
 def is_revision_sentence(sentence: str) -> bool:
@@ -151,9 +156,9 @@ def is_revision_sentence(sentence: str) -> bool:
 
 
 def extract_title(text: str) -> str:
+    """Extract a best-effort title from the PDF text."""
     lines = get_clean_lines(text)
 
-    # First pass: prefer title-like lines
     for i, line in enumerate(lines[:80]):
         lowered = line.lower()
 
@@ -191,13 +196,11 @@ def extract_title(text: str) -> str:
             title = " ".join(title_parts).strip()
             title = re.sub(r"\s+", " ", title)
 
-            # Trim obvious incomplete endings
             if title.endswith("Human Drug"):
                 title += " and Biological Products"
 
             return title
 
-    # Fallback
     for line in lines:
         if not is_noise_line(line) and len(line) > 10:
             return line
@@ -205,7 +208,8 @@ def extract_title(text: str) -> str:
     return "Untitled Document"
 
 
-def find_body_sentences(text: str):
+def find_body_sentences(text: str) -> List[str]:
+    """Find the most meaningful content sentences from the document body."""
     sentences = split_sentences(text)
 
     meaningful = []
@@ -230,7 +234,6 @@ def find_body_sentences(text: str):
         if started:
             meaningful.append(sentence)
 
-    # Fallback 1: take non-noise, non-revision, longer sentences
     if not meaningful:
         for sentence in sentences:
             lowered = sentence.lower()
@@ -244,7 +247,6 @@ def find_body_sentences(text: str):
 
             meaningful.append(sentence)
 
-    # Fallback 2: if still empty, take best long sentences
     if not meaningful:
         for sentence in sentences:
             if len(sentence) >= 50:
@@ -254,6 +256,7 @@ def find_body_sentences(text: str):
 
 
 def summarize_text(text: str) -> str:
+    """Create a short summary from meaningful body sentences."""
     sentences = find_body_sentences(text)
 
     if not sentences:
@@ -261,9 +264,6 @@ def summarize_text(text: str) -> str:
 
     selected = []
     for sentence in sentences:
-        lowered = sentence.lower()
-
-        # avoid overly long admin/history fragments
         if is_revision_sentence(sentence):
             continue
 
@@ -282,7 +282,8 @@ def summarize_text(text: str) -> str:
     return summary
 
 
-def extract_key_highlights(text: str, max_points: int = 5):
+def extract_key_highlights(text: str, max_points: int = 5) -> List[str]:
+    """Extract important highlights using simple keyword-guided selection."""
     sentences = find_body_sentences(text)
 
     keywords = [
@@ -326,21 +327,22 @@ def extract_key_highlights(text: str, max_points: int = 5):
     return highlights[:max_points]
 
 
-st.set_page_config(page_title="PharmaSummarizer MVP", layout="wide")
+st.set_page_config(page_title="PharmaSummarizer MVP", page_icon="💊", layout="wide")
 
-st.title("PharmaSummarizer MVP")
-st.write("Upload a pharma/regulatory PDF and generate a structured summary.")
+st.title("💊 PharmaSummarizer MVP")
+st.write("Upload a pharmaceutical or regulatory PDF and generate a structured summary.")
 
 uploaded_file = st.file_uploader("Upload PDF", type=["pdf"])
 
 if uploaded_file is not None:
     pdf_bytes = uploaded_file.read()
-    extracted_text = extract_text_from_pdf(pdf_bytes)
 
-    title = extract_title(extracted_text)
-    summary = summarize_text(extracted_text)
-    highlights = extract_key_highlights(extracted_text)
-    preview_text = clean_preview_text(extracted_text)
+    with st.spinner("Extracting and summarizing document..."):
+        extracted_text = extract_text_from_pdf(pdf_bytes)
+        title = extract_title(extracted_text)
+        summary = summarize_text(extracted_text)
+        highlights = extract_key_highlights(extracted_text)
+        preview_text = clean_preview_text(extracted_text)
 
     st.subheader("Document Title")
     st.write(title)
@@ -349,8 +351,11 @@ if uploaded_file is not None:
     st.write(summary)
 
     st.subheader("Key Highlights")
-    for i, point in enumerate(highlights, start=1):
-        st.markdown(f"{i}. {point}")
+    if highlights:
+        for i, point in enumerate(highlights, start=1):
+            st.markdown(f"{i}. {point}")
+    else:
+        st.write("No key highlights identified.")
 
     with st.expander("Extracted Text Preview"):
         st.text(preview_text[:4000] if preview_text else "No text extracted.")
