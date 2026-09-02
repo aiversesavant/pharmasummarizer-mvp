@@ -11,31 +11,36 @@ pinned: false
 
 # PharmaSummarizer MVP
 
-PharmaSummarizer MVP is a lightweight Streamlit app for pharmaceutical and regulatory PDF summarization.
+PharmaSummarizer MVP is an early deterministic prototype for summarizing pharmaceutical and regulatory PDF documents.
 
-## Features
-- Upload a PDF
-- Extract raw text
-- Generate a document title
-- Generate a short summary
-- Extract key highlights
-- Show an extracted text preview
+It uses local PDF extraction and rule-based document heuristics rather than an LLM.
 
-## Tech Stack
-- Python
-- Streamlit
-- PyMuPDF
+## What It Demonstrates
 
-## How to Use
-1. Upload a pharmaceutical or regulatory PDF
-2. Wait for extraction and summary generation
-3. Review the document title, summary, highlights, and preview text
+- in-memory PDF text extraction with PyMuPDF
+- pharmaceutical and regulatory document cleanup
+- noise and revision-history filtering
+- heuristic title detection
+- deterministic extractive summarization
+- keyword-guided highlight selection
+- Streamlit document-review UI
+- regression testing for document-filtering behavior
 
-## Project Purpose
-This project is the summarization module in the broader PharmaAI platform.
+## Processing Flow
 
-## Notes
-- This MVP is designed for lightweight document summarization
-- It is separate from:
-  - **PharmaRAG** → grounded pharma/regulatory Q&A
-  - **CompliBot** → compliance/SOP/process-oriented Q&A
+```text
+PDF Upload
+    ↓
+PyMuPDF Text Extraction
+    ↓
+Noise / Revision Filtering
+    ↓
+Title Detection
+    ↓
+Body Sentence Selection
+    ↓
+Extractive Summary
+    ↓
+Keyword-Guided Highlights
+    ↓
+Streamlit Review

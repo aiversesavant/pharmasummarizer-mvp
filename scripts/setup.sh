@@ -1,21 +1,18 @@
 #!/bin/bash
-set -e
+
+set -euo pipefail
 
 echo "Setting up pharmasummarizer-mvp..."
 
-if [ ! -d "venv" ] && [ ! -d ".venv" ]; then
-  python3 -m venv venv
+if [ ! -d ".venv" ]; then
+    python3 -m venv .venv
 fi
 
-if [ -d "venv" ]; then
-  source venv/bin/activate
-elif [ -d ".venv" ]; then
-  source .venv/bin/activate
-fi
+source .venv/bin/activate
 
-pip install --upgrade pip
-pip install -r requirements.txt
-
-mkdir -p data/output/flagged docs tests/unit tests/integration scripts infra logs
+python -m pip install --upgrade pip
+python -m pip install -r requirements-dev.txt
 
 echo "Setup complete."
+echo "Run the app with:"
+echo "  streamlit run app.py"

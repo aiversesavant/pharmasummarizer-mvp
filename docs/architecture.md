@@ -1,17 +1,32 @@
 # Architecture
 
 ## Purpose
-PharmaSummarizer MVP is an AI-assisted document summarization tool for pharma and regulatory content.
 
-## Core Entry Points
-- `app.py` — main application entry point
-- `extractor.py` — document extraction/summarization logic
+PharmaSummarizer MVP is a lightweight deterministic pharmaceutical and regulatory PDF summarization prototype.
 
-## Application Area
-- `app/` — app-specific supporting code
+It does not use an LLM.
 
-## Data Areas
-- `data/output/flagged/` — flagged output artifacts
+The application demonstrates a rule-based document-processing pipeline built around local PDF extraction, domain-oriented filtering, extractive sentence selection, and keyword-guided highlights.
 
-## Notes
-This project is being normalized to the enterprise workspace standard while preserving current behavior.
+## Processing Architecture
+
+```text
+Uploaded PDF
+     ↓
+PyMuPDF
+     ↓
+Raw Document Text
+     ↓
+Preview Cleanup
+     ↓
+Noise / Revision-History Filtering
+     ↓
+Title Detection
+     ↓
+Body Sentence Selection
+     ↓
+Extractive Summary
+     ↓
+Keyword-Guided Highlights
+     ↓
+Streamlit UI
